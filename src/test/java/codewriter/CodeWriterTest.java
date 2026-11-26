@@ -184,6 +184,20 @@ class CodeWriterTest {
   }
 
   @Test
+  void pointerAccessesThisAndThat() {
+    assertEquals("""
+        // pop pointer 0
+        @SP
+        AM=M-1
+        D=M
+        @THIS
+        M=D
+        """, translate(w -> w.writePop("pointer", 0)));
+    assertTrue(translate(w -> w.writePush("pointer", 1)).startsWith("// push pointer 1\n@THAT\nD=M\n"));
+    assertThrows(IllegalArgumentException.class, () -> translate(w -> w.writePop("pointer", 2)));
+  }
+
+  @Test
   void rejectsPopConstant() {
     assertThrows(IllegalArgumentException.class, () -> translate(w -> w.writePop("constant", 0)));
   }

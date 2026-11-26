@@ -50,6 +50,7 @@ public class CodeWriter implements AutoCloseable {
       case "constant" -> write("@" + inRange(segment, index, MAX_CONSTANT), "D=A");
       case "local", "argument", "this", "that" -> write("@" + base(segment), "D=M", "@" + index, "A=D+A", "D=M");
       case "temp" -> write("@" + temp(index), "D=M");
+      case "pointer" -> write("@" + pointer(index), "D=M");
       default -> throw new IllegalArgumentException("unknown segment '" + segment + "'");
     }
     pushD();
@@ -66,6 +67,10 @@ public class CodeWriter implements AutoCloseable {
       case "temp" -> {
         popD();
         write("@" + temp(index), "M=D");
+      }
+      case "pointer" -> {
+        popD();
+        write("@" + pointer(index), "M=D");
       }
       case "constant" -> throw new IllegalArgumentException("cannot pop to segment 'constant'");
       default -> throw new IllegalArgumentException("unknown segment '" + segment + "'");
@@ -120,6 +125,10 @@ public class CodeWriter implements AutoCloseable {
 
   private static int temp(int index) {
     return TEMP_BASE + inRange("temp", index, TEMP_SIZE - 1);
+  }
+
+  private static String pointer(int index) {
+    return inRange("pointer", index, 1) == 0 ? "THIS" : "THAT";
   }
 
   private static int inRange(String segment, int index, int max) {
