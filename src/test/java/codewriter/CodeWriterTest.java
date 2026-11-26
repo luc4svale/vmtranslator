@@ -198,6 +198,23 @@ class CodeWriterTest {
   }
 
   @Test
+  void staticUsesFileNameAsPrefix() {
+    assertEquals("""
+        // pop static 3
+        @SP
+        AM=M-1
+        D=M
+        @Foo.3
+        M=D
+        """, translate(w -> w.writePop("static", 3)));
+    String asm = translate(w -> {
+      w.setFileName("Bar");
+      w.writePush("static", 3);
+    });
+    assertTrue(asm.startsWith("// push static 3\n@Bar.3\nD=M\n"));
+  }
+
+  @Test
   void rejectsPopConstant() {
     assertThrows(IllegalArgumentException.class, () -> translate(w -> w.writePop("constant", 0)));
   }

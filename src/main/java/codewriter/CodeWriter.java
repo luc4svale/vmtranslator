@@ -51,6 +51,7 @@ public class CodeWriter implements AutoCloseable {
       case "local", "argument", "this", "that" -> write("@" + base(segment), "D=M", "@" + index, "A=D+A", "D=M");
       case "temp" -> write("@" + temp(index), "D=M");
       case "pointer" -> write("@" + pointer(index), "D=M");
+      case "static" -> write("@" + fileName + "." + index, "D=M");
       default -> throw new IllegalArgumentException("unknown segment '" + segment + "'");
     }
     pushD();
@@ -71,6 +72,10 @@ public class CodeWriter implements AutoCloseable {
       case "pointer" -> {
         popD();
         write("@" + pointer(index), "M=D");
+      }
+      case "static" -> {
+        popD();
+        write("@" + fileName + "." + index, "M=D");
       }
       case "constant" -> throw new IllegalArgumentException("cannot pop to segment 'constant'");
       default -> throw new IllegalArgumentException("unknown segment '" + segment + "'");
