@@ -161,6 +161,29 @@ class CodeWriterTest {
   }
 
   @Test
+  void tempUsesFixedAddress() {
+    assertEquals("""
+        // push temp 2
+        @7
+        D=M
+        @SP
+        A=M
+        M=D
+        @SP
+        M=M+1
+        """, translate(w -> w.writePush("temp", 2)));
+    assertEquals("""
+        // pop temp 6
+        @SP
+        AM=M-1
+        D=M
+        @11
+        M=D
+        """, translate(w -> w.writePop("temp", 6)));
+    assertThrows(IllegalArgumentException.class, () -> translate(w -> w.writePush("temp", 8)));
+  }
+
+  @Test
   void rejectsPopConstant() {
     assertThrows(IllegalArgumentException.class, () -> translate(w -> w.writePop("constant", 0)));
   }

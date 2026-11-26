@@ -9,6 +9,8 @@ import java.nio.file.Path;
 public class CodeWriter implements AutoCloseable {
 
   private static final int MAX_CONSTANT = 32767;
+  private static final int TEMP_BASE = 5;
+  private static final int TEMP_SIZE = 8;
 
   private final Writer out;
   private String fileName = "";
@@ -47,6 +49,7 @@ public class CodeWriter implements AutoCloseable {
     switch (segment) {
       case "constant" -> write("@" + inRange(segment, index, MAX_CONSTANT), "D=A");
       case "local", "argument", "this", "that" -> write("@" + base(segment), "D=M", "@" + index, "A=D+A", "D=M");
+      case "temp" -> write("@" + temp(index), "D=M");
       default -> throw new IllegalArgumentException("unknown segment '" + segment + "'");
     }
     pushD();
@@ -59,6 +62,10 @@ public class CodeWriter implements AutoCloseable {
         write("@" + base(segment), "D=M", "@" + index, "D=D+A", "@R13", "M=D");
         popD();
         write("@R13", "A=M", "M=D");
+      }
+      case "temp" -> {
+        popD();
+        write("@" + temp(index), "M=D");
       }
       case "constant" -> throw new IllegalArgumentException("cannot pop to segment 'constant'");
       default -> throw new IllegalArgumentException("unknown segment '" + segment + "'");
@@ -109,6 +116,10 @@ public class CodeWriter implements AutoCloseable {
       case "that" -> "THAT";
       default -> throw new IllegalArgumentException("segment '" + segment + "' has no base register");
     };
+  }
+
+  private static int temp(int index) {
+    return TEMP_BASE + inRange("temp", index, TEMP_SIZE - 1);
   }
 
   private static int inRange(String segment, int index, int max) {
