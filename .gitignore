@@ -6,3 +6,4 @@ output/
 .vscode/
 *.iml
 .DS_Store
+tools/bin/*.dat
