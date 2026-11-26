@@ -29,6 +29,11 @@ public class CodeWriter implements AutoCloseable {
     comment(command);
     switch (command) {
       case "add" -> binary("M=D+M");
+      case "sub" -> binary("M=M-D");
+      case "and" -> binary("M=D&M");
+      case "or" -> binary("M=D|M");
+      case "neg" -> unary("M=-M");
+      case "not" -> unary("M=!M");
       default -> throw new IllegalArgumentException("unknown arithmetic command '" + command + "'");
     }
   }
@@ -53,6 +58,10 @@ public class CodeWriter implements AutoCloseable {
 
   private void binary(String operation) {
     write("@SP", "AM=M-1", "D=M", "A=A-1", operation);
+  }
+
+  private void unary(String operation) {
+    write("@SP", "A=M-1", operation);
   }
 
   private void pushD() {

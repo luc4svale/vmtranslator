@@ -2,6 +2,7 @@ package codewriter;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.StringWriter;
 import java.util.function.Consumer;
@@ -42,6 +43,40 @@ class CodeWriterTest {
         A=A-1
         M=D+M
         """, translate(w -> w.writeArithmetic("add")));
+  }
+
+  @Test
+  void subKeepsOperandOrder() {
+    assertEquals("""
+        // sub
+        @SP
+        AM=M-1
+        D=M
+        A=A-1
+        M=M-D
+        """, translate(w -> w.writeArithmetic("sub")));
+  }
+
+  @Test
+  void binaryLogicalCommands() {
+    assertTrue(translate(w -> w.writeArithmetic("and")).endsWith("A=A-1\nM=D&M\n"));
+    assertTrue(translate(w -> w.writeArithmetic("or")).endsWith("A=A-1\nM=D|M\n"));
+  }
+
+  @Test
+  void unaryCommands() {
+    assertEquals("""
+        // neg
+        @SP
+        A=M-1
+        M=-M
+        """, translate(w -> w.writeArithmetic("neg")));
+    assertEquals("""
+        // not
+        @SP
+        A=M-1
+        M=!M
+        """, translate(w -> w.writeArithmetic("not")));
   }
 
   @Test
