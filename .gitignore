@@ -1,0 +1,8 @@
+target/
+output/
+*.out
+*.asm
+.idea/
+.vscode/
+*.iml
+.DS_Store
