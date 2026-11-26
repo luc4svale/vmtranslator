@@ -46,6 +46,7 @@ public class Main {
         switch (parser.commandType()) {
           case C_ARITHMETIC -> writer.writeArithmetic(parser.arg1());
           case C_PUSH -> writer.writePush(parser.arg1(), parser.arg2());
+          case C_POP -> writer.writePop(parser.arg1(), parser.arg2());
           default -> throw new IllegalArgumentException("unsupported command " + parser.commandType());
         }
       }

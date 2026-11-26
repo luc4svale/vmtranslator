@@ -118,6 +118,54 @@ class CodeWriterTest {
   }
 
   @Test
+  void pushLocal() {
+    assertEquals("""
+        // push local 2
+        @LCL
+        D=M
+        @2
+        A=D+A
+        D=M
+        @SP
+        A=M
+        M=D
+        @SP
+        M=M+1
+        """, translate(w -> w.writePush("local", 2)));
+  }
+
+  @Test
+  void popLocalUsesR13() {
+    assertEquals("""
+        // pop local 2
+        @LCL
+        D=M
+        @2
+        D=D+A
+        @R13
+        M=D
+        @SP
+        AM=M-1
+        D=M
+        @R13
+        A=M
+        M=D
+        """, translate(w -> w.writePop("local", 2)));
+  }
+
+  @Test
+  void dynamicSegmentsUseTheirBaseRegisters() {
+    assertTrue(translate(w -> w.writePush("argument", 1)).startsWith("// push argument 1\n@ARG\n"));
+    assertTrue(translate(w -> w.writePush("this", 6)).startsWith("// push this 6\n@THIS\n"));
+    assertTrue(translate(w -> w.writePop("that", 5)).startsWith("// pop that 5\n@THAT\n"));
+  }
+
+  @Test
+  void rejectsPopConstant() {
+    assertThrows(IllegalArgumentException.class, () -> translate(w -> w.writePop("constant", 0)));
+  }
+
+  @Test
   void rejectsUnknownCommandAndSegment() {
     assertThrows(IllegalArgumentException.class, () -> translate(w -> w.writeArithmetic("mul")));
     assertThrows(IllegalArgumentException.class, () -> translate(w -> w.writePush("heap", 0)));

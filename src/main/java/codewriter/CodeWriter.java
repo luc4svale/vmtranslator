@@ -46,9 +46,23 @@ public class CodeWriter implements AutoCloseable {
     comment("push " + segment + " " + index);
     switch (segment) {
       case "constant" -> write("@" + inRange(segment, index, MAX_CONSTANT), "D=A");
+      case "local", "argument", "this", "that" -> write("@" + base(segment), "D=M", "@" + index, "A=D+A", "D=M");
       default -> throw new IllegalArgumentException("unknown segment '" + segment + "'");
     }
     pushD();
+  }
+
+  public void writePop(String segment, int index) {
+    comment("pop " + segment + " " + index);
+    switch (segment) {
+      case "local", "argument", "this", "that" -> {
+        write("@" + base(segment), "D=M", "@" + index, "D=D+A", "@R13", "M=D");
+        popD();
+        write("@R13", "A=M", "M=D");
+      }
+      case "constant" -> throw new IllegalArgumentException("cannot pop to segment 'constant'");
+      default -> throw new IllegalArgumentException("unknown segment '" + segment + "'");
+    }
   }
 
   @Override
@@ -81,6 +95,20 @@ public class CodeWriter implements AutoCloseable {
 
   private void pushD() {
     write("@SP", "A=M", "M=D", "@SP", "M=M+1");
+  }
+
+  private void popD() {
+    write("@SP", "AM=M-1", "D=M");
+  }
+
+  private static String base(String segment) {
+    return switch (segment) {
+      case "local" -> "LCL";
+      case "argument" -> "ARG";
+      case "this" -> "THIS";
+      case "that" -> "THAT";
+      default -> throw new IllegalArgumentException("segment '" + segment + "' has no base register");
+    };
   }
 
   private static int inRange(String segment, int index, int max) {
