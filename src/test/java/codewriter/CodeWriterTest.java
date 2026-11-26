@@ -80,6 +80,44 @@ class CodeWriterTest {
   }
 
   @Test
+  void eq() {
+    assertEquals("""
+        // eq
+        @SP
+        AM=M-1
+        D=M
+        A=A-1
+        D=M-D
+        @TRUE_EQ_0
+        D;JEQ
+        @SP
+        A=M-1
+        M=0
+        @END_EQ_0
+        0;JMP
+        (TRUE_EQ_0)
+        @SP
+        A=M-1
+        M=-1
+        (END_EQ_0)
+        """, translate(w -> w.writeArithmetic("eq")));
+  }
+
+  @Test
+  void comparisonsUseUniqueLabels() {
+    String asm = translate(w -> {
+      w.writeArithmetic("eq");
+      w.writeArithmetic("gt");
+      w.writeArithmetic("lt");
+      w.writeArithmetic("eq");
+    });
+    assertTrue(asm.contains("(TRUE_EQ_0)"));
+    assertTrue(asm.contains("@TRUE_GT_1\nD;JGT\n"));
+    assertTrue(asm.contains("@TRUE_LT_2\nD;JLT\n"));
+    assertTrue(asm.contains("(END_EQ_3)"));
+  }
+
+  @Test
   void rejectsUnknownCommandAndSegment() {
     assertThrows(IllegalArgumentException.class, () -> translate(w -> w.writeArithmetic("mul")));
     assertThrows(IllegalArgumentException.class, () -> translate(w -> w.writePush("heap", 0)));

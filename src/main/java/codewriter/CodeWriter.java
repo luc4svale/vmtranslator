@@ -12,6 +12,7 @@ public class CodeWriter implements AutoCloseable {
 
   private final Writer out;
   private String fileName = "";
+  private int labelCount = 0;
 
   public CodeWriter(Path file) throws IOException {
     this(Files.newBufferedWriter(file));
@@ -34,6 +35,9 @@ public class CodeWriter implements AutoCloseable {
       case "or" -> binary("M=D|M");
       case "neg" -> unary("M=-M");
       case "not" -> unary("M=!M");
+      case "eq" -> comparison("EQ");
+      case "gt" -> comparison("GT");
+      case "lt" -> comparison("LT");
       default -> throw new IllegalArgumentException("unknown arithmetic command '" + command + "'");
     }
   }
@@ -62,6 +66,17 @@ public class CodeWriter implements AutoCloseable {
 
   private void unary(String operation) {
     write("@SP", "A=M-1", operation);
+  }
+
+  private void comparison(String jump) {
+    int id = labelCount++;
+    String trueLabel = "TRUE_" + jump + "_" + id;
+    String endLabel = "END_" + jump + "_" + id;
+    write("@SP", "AM=M-1", "D=M", "A=A-1", "D=M-D");
+    write("@" + trueLabel, "D;J" + jump);
+    write("@SP", "A=M-1", "M=0", "@" + endLabel, "0;JMP");
+    write("(" + trueLabel + ")", "@SP", "A=M-1", "M=-1");
+    write("(" + endLabel + ")");
   }
 
   private void pushD() {
