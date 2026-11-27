@@ -267,6 +267,71 @@ class CodeWriterTest {
   }
 
   @Test
+  void returnFollowsChapterSequence() {
+    assertEquals("""
+        // return
+        @LCL
+        D=M
+        @R14
+        M=D
+        @5
+        D=A
+        @R14
+        A=M-D
+        D=M
+        @R15
+        M=D
+        @SP
+        AM=M-1
+        D=M
+        @ARG
+        A=M
+        M=D
+        @ARG
+        D=M+1
+        @SP
+        M=D
+        @1
+        D=A
+        @R14
+        A=M-D
+        D=M
+        @THAT
+        M=D
+        @2
+        D=A
+        @R14
+        A=M-D
+        D=M
+        @THIS
+        M=D
+        @3
+        D=A
+        @R14
+        A=M-D
+        D=M
+        @ARG
+        M=D
+        @4
+        D=A
+        @R14
+        A=M-D
+        D=M
+        @LCL
+        M=D
+        @R15
+        A=M
+        0;JMP
+        """, translate(CodeWriter::writeReturn));
+  }
+
+  @Test
+  void returnReadsReturnAddressBeforeWritingResult() {
+    String asm = translate(CodeWriter::writeReturn);
+    assertTrue(asm.indexOf("@R15\nM=D") < asm.indexOf("@ARG\nA=M\nM=D"));
+  }
+
+  @Test
   void rejectsPopConstant() {
     assertThrows(IllegalArgumentException.class, () -> translate(w -> w.writePop("constant", 0)));
   }

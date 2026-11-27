@@ -109,6 +109,20 @@ public class CodeWriter implements AutoCloseable {
     }
   }
 
+  public void writeReturn() {
+    comment("return");
+    write("@LCL", "D=M", "@R14", "M=D");
+    write("@5", "D=A", "@R14", "A=M-D", "D=M", "@R15", "M=D");
+    popD();
+    write("@ARG", "A=M", "M=D");
+    write("@ARG", "D=M+1", "@SP", "M=D");
+    restore("THAT", 1);
+    restore("THIS", 2);
+    restore("ARG", 3);
+    restore("LCL", 4);
+    write("@R15", "A=M", "0;JMP");
+  }
+
   @Override
   public void close() {
     try {
@@ -143,6 +157,10 @@ public class CodeWriter implements AutoCloseable {
 
   private void popD() {
     write("@SP", "AM=M-1", "D=M");
+  }
+
+  private void restore(String register, int offset) {
+    write("@" + offset, "D=A", "@R14", "A=M-D", "D=M", "@" + register, "M=D");
   }
 
   private String qualified(String label) {
