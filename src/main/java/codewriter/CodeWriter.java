@@ -100,6 +100,15 @@ public class CodeWriter implements AutoCloseable {
     write("@" + qualified(label), "D;JNE");
   }
 
+  public void writeFunction(String name, int nVars) {
+    comment("function " + name + " " + nVars);
+    currentFunction = name;
+    write("(" + name + ")");
+    for (int i = 0; i < nVars; i++) {
+      write("@SP", "A=M", "M=0", "@SP", "M=M+1");
+    }
+  }
+
   @Override
   public void close() {
     try {

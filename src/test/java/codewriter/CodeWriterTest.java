@@ -236,6 +236,37 @@ class CodeWriterTest {
   }
 
   @Test
+  void functionPushesZeroForEachLocal() {
+    assertEquals("""
+        // function Foo.bar 2
+        (Foo.bar)
+        @SP
+        A=M
+        M=0
+        @SP
+        M=M+1
+        @SP
+        A=M
+        M=0
+        @SP
+        M=M+1
+        """, translate(w -> w.writeFunction("Foo.bar", 2)));
+    assertEquals("// function Foo.baz 0\n(Foo.baz)\n", translate(w -> w.writeFunction("Foo.baz", 0)));
+  }
+
+  @Test
+  void labelsInsideFunctionUseFunctionName() {
+    String asm = translate(w -> {
+      w.writeFunction("Foo.bar", 0);
+      w.writeLabel("END");
+      w.writeFunction("Foo.baz", 0);
+      w.writeLabel("END");
+    });
+    assertTrue(asm.contains("(Foo.bar$END)"));
+    assertTrue(asm.contains("(Foo.baz$END)"));
+  }
+
+  @Test
   void rejectsPopConstant() {
     assertThrows(IllegalArgumentException.class, () -> translate(w -> w.writePop("constant", 0)));
   }

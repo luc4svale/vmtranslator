@@ -50,6 +50,7 @@ public class Main {
           case C_LABEL -> writer.writeLabel(parser.arg1());
           case C_GOTO -> writer.writeGoto(parser.arg1());
           case C_IF -> writer.writeIf(parser.arg1());
+          case C_FUNCTION -> writer.writeFunction(parser.arg1(), parser.arg2());
           default -> throw new IllegalArgumentException("unsupported command " + parser.commandType());
         }
       }
