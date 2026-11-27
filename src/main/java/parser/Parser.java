@@ -44,13 +44,17 @@ public class Parser {
   }
 
   public String arg1() {
-    return command().arg1();
+    Command command = command();
+    if (command.type() == CommandType.C_RETURN) {
+      throw new IllegalStateException("arg1 is not defined for " + command.type());
+    }
+    return command.arg1();
   }
 
   public int arg2() {
     Command command = command();
     return switch (command.type()) {
-      case C_PUSH, C_POP -> command.arg2();
+      case C_PUSH, C_POP, C_FUNCTION, C_CALL -> command.arg2();
       default -> throw new IllegalStateException("arg2 is not defined for " + command.type());
     };
   }
@@ -78,6 +82,9 @@ public class Parser {
       case "label" -> withName(CommandType.C_LABEL, tokens, line);
       case "goto" -> withName(CommandType.C_GOTO, tokens, line);
       case "if-goto" -> withName(CommandType.C_IF, tokens, line);
+      case "function" -> withNameAndNumber(CommandType.C_FUNCTION, tokens, line);
+      case "call" -> withNameAndNumber(CommandType.C_CALL, tokens, line);
+      case "return" -> withoutArgs(CommandType.C_RETURN, tokens, line);
       default -> throw new IllegalArgumentException("line " + line + ": unknown command '" + keyword + "'");
     };
   }

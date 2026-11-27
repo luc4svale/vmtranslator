@@ -76,6 +76,23 @@ class ParserTest {
   }
 
   @Test
+  void readsFunctionCommands() throws IOException {
+    Parser parser = parse("function Main.fibonacci 0\ncall Main.fibonacci 1\nreturn\n");
+    parser.advance();
+    assertEquals(CommandType.C_FUNCTION, parser.commandType());
+    assertEquals("Main.fibonacci", parser.arg1());
+    assertEquals(0, parser.arg2());
+    parser.advance();
+    assertEquals(CommandType.C_CALL, parser.commandType());
+    assertEquals("Main.fibonacci", parser.arg1());
+    assertEquals(1, parser.arg2());
+    parser.advance();
+    assertEquals(CommandType.C_RETURN, parser.commandType());
+    assertThrows(IllegalStateException.class, parser::arg1);
+    assertThrows(IllegalStateException.class, parser::arg2);
+  }
+
+  @Test
   void acceptsWindowsLineEndings() throws IOException {
     Parser parser = parse("push constant 7\r\nadd\r\n");
     parser.advance();
@@ -96,6 +113,8 @@ class ParserTest {
     assertThrows(IllegalArgumentException.class, () -> parse("push constant\n"));
     assertThrows(IllegalArgumentException.class, () -> parse("add 1\n"));
     assertThrows(IllegalArgumentException.class, () -> parse("goto\n"));
+    assertThrows(IllegalArgumentException.class, () -> parse("call Foo.bar\n"));
+    assertThrows(IllegalArgumentException.class, () -> parse("return 0\n"));
   }
 
   @Test
