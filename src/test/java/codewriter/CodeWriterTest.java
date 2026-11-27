@@ -215,6 +215,27 @@ class CodeWriterTest {
   }
 
   @Test
+  void branchingOutsideFunctionUsesFileName() {
+    assertEquals("""
+        // label LOOP
+        (Foo$LOOP)
+        // goto LOOP
+        @Foo$LOOP
+        0;JMP
+        // if-goto LOOP
+        @SP
+        AM=M-1
+        D=M
+        @Foo$LOOP
+        D;JNE
+        """, translate(w -> {
+          w.writeLabel("LOOP");
+          w.writeGoto("LOOP");
+          w.writeIf("LOOP");
+        }));
+  }
+
+  @Test
   void rejectsPopConstant() {
     assertThrows(IllegalArgumentException.class, () -> translate(w -> w.writePop("constant", 0)));
   }

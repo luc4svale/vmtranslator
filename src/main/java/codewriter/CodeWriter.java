@@ -14,6 +14,7 @@ public class CodeWriter implements AutoCloseable {
 
   private final Writer out;
   private String fileName = "";
+  private String currentFunction = "";
   private int labelCount = 0;
 
   public CodeWriter(Path file) throws IOException {
@@ -26,6 +27,7 @@ public class CodeWriter implements AutoCloseable {
 
   public void setFileName(String fileName) {
     this.fileName = fileName;
+    this.currentFunction = fileName;
   }
 
   public void writeArithmetic(String command) {
@@ -82,6 +84,22 @@ public class CodeWriter implements AutoCloseable {
     }
   }
 
+  public void writeLabel(String label) {
+    comment("label " + label);
+    write("(" + qualified(label) + ")");
+  }
+
+  public void writeGoto(String label) {
+    comment("goto " + label);
+    write("@" + qualified(label), "0;JMP");
+  }
+
+  public void writeIf(String label) {
+    comment("if-goto " + label);
+    popD();
+    write("@" + qualified(label), "D;JNE");
+  }
+
   @Override
   public void close() {
     try {
@@ -116,6 +134,10 @@ public class CodeWriter implements AutoCloseable {
 
   private void popD() {
     write("@SP", "AM=M-1", "D=M");
+  }
+
+  private String qualified(String label) {
+    return currentFunction + "$" + label;
   }
 
   private static String base(String segment) {
