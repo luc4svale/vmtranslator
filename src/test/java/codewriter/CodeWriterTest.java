@@ -267,6 +267,69 @@ class CodeWriterTest {
   }
 
   @Test
+  void callSavesFrameAndJumps() {
+    String asm = translate(w -> {
+      w.writeFunction("Foo.main", 0);
+      w.writeCall("Bar.mult", 2);
+    });
+    assertTrue(asm.contains("""
+        // call Bar.mult 2
+        @Foo.main$ret.0
+        D=A
+        @SP
+        A=M
+        M=D
+        @SP
+        M=M+1
+        @LCL
+        D=M
+        @SP
+        A=M
+        M=D
+        @SP
+        M=M+1
+        """));
+    assertTrue(asm.contains("""
+        @THAT
+        D=M
+        @SP
+        A=M
+        M=D
+        @SP
+        M=M+1
+        @5
+        D=A
+        @2
+        D=D+A
+        @SP
+        D=M-D
+        @ARG
+        M=D
+        @SP
+        D=M
+        @LCL
+        M=D
+        @Bar.mult
+        0;JMP
+        (Foo.main$ret.0)
+        """));
+  }
+
+  @Test
+  void callsGetUniqueReturnLabels() {
+    String asm = translate(w -> {
+      w.writeFunction("Foo.main", 0);
+      w.writeCall("Foo.bar", 0);
+      w.writeCall("Foo.bar", 0);
+      w.writeFunction("Foo.bar", 0);
+      w.writeCall("Foo.baz", 1);
+    });
+    assertTrue(asm.contains("(Foo.main$ret.0)"));
+    assertTrue(asm.contains("(Foo.main$ret.1)"));
+    assertTrue(asm.contains("(Foo.bar$ret.2)"));
+  }
+
+  @Test
   void returnFollowsChapterSequence() {
     assertEquals("""
         // return

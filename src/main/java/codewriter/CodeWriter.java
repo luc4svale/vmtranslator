@@ -16,6 +16,7 @@ public class CodeWriter implements AutoCloseable {
   private String fileName = "";
   private String currentFunction = "";
   private int labelCount = 0;
+  private int callCount = 0;
 
   public CodeWriter(Path file) throws IOException {
     this(Files.newBufferedWriter(file));
@@ -109,6 +110,21 @@ public class CodeWriter implements AutoCloseable {
     }
   }
 
+  public void writeCall(String name, int nArgs) {
+    comment("call " + name + " " + nArgs);
+    String returnLabel = currentFunction + "$ret." + callCount++;
+    write("@" + returnLabel, "D=A");
+    pushD();
+    pushRegister("LCL");
+    pushRegister("ARG");
+    pushRegister("THIS");
+    pushRegister("THAT");
+    write("@5", "D=A", "@" + nArgs, "D=D+A", "@SP", "D=M-D", "@ARG", "M=D");
+    write("@SP", "D=M", "@LCL", "M=D");
+    write("@" + name, "0;JMP");
+    write("(" + returnLabel + ")");
+  }
+
   public void writeReturn() {
     comment("return");
     write("@LCL", "D=M", "@R14", "M=D");
@@ -157,6 +173,11 @@ public class CodeWriter implements AutoCloseable {
 
   private void popD() {
     write("@SP", "AM=M-1", "D=M");
+  }
+
+  private void pushRegister(String register) {
+    write("@" + register, "D=M");
+    pushD();
   }
 
   private void restore(String register, int offset) {
