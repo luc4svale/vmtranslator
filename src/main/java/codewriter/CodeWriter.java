@@ -26,6 +26,13 @@ public class CodeWriter implements AutoCloseable {
     this.out = out;
   }
 
+  public void writeInit() {
+    comment("bootstrap");
+    write("@256", "D=A", "@SP", "M=D");
+    currentFunction = "Bootstrap";
+    writeCall("Sys.init", 0);
+  }
+
   public void setFileName(String fileName) {
     this.fileName = fileName;
     this.currentFunction = fileName;

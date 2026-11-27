@@ -30,7 +30,12 @@ public class Main {
     Path output = Files.isDirectory(path)
         ? path.resolve(path.getFileName() + ".asm")
         : path.resolveSibling(baseName(path) + ".asm");
+    boolean bootstrap = Files.isDirectory(path)
+        && sources.stream().anyMatch(source -> source.getFileName().toString().equals("Sys.vm"));
     try (CodeWriter writer = new CodeWriter(output)) {
+      if (bootstrap) {
+        writer.writeInit();
+      }
       for (Path source : sources) {
         translateFile(source, writer);
       }

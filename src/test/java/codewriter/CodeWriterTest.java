@@ -330,6 +330,25 @@ class CodeWriterTest {
   }
 
   @Test
+  void initSetsStackPointerAndCallsSysInit() {
+    StringWriter out = new StringWriter();
+    try (CodeWriter writer = new CodeWriter(out)) {
+      writer.writeInit();
+    }
+    String asm = out.toString();
+    assertTrue(asm.startsWith("""
+        // bootstrap
+        @256
+        D=A
+        @SP
+        M=D
+        // call Sys.init 0
+        @Bootstrap$ret.0
+        """));
+    assertTrue(asm.endsWith("@Sys.init\n0;JMP\n(Bootstrap$ret.0)\n"));
+  }
+
+  @Test
   void returnFollowsChapterSequence() {
     assertEquals("""
         // return

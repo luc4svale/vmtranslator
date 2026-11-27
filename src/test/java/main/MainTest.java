@@ -41,6 +41,19 @@ class MainTest {
   }
 
   @Test
+  void writesBootstrapOnlyForDirectoryWithSysVm() throws IOException {
+    Path withSys = Files.createDirectory(dir.resolve("WithSys"));
+    Files.writeString(withSys.resolve("Sys.vm"), "function Sys.init 0\nlabel END\ngoto END\n");
+    assertTrue(Files.readString(Main.translate(withSys)).startsWith("// bootstrap\n@256\n"));
+
+    Path withoutSys = Files.createDirectory(dir.resolve("WithoutSys"));
+    Files.writeString(withoutSys.resolve("Main.vm"), "function Main.main 0\npush constant 0\nreturn\n");
+    assertFalse(Files.readString(Main.translate(withoutSys)).contains("bootstrap"));
+
+    assertFalse(Files.readString(Main.translate(withSys.resolve("Sys.vm"))).contains("bootstrap"));
+  }
+
+  @Test
   void rejectsDirectoryWithoutVmFiles() throws IOException {
     Path empty = Files.createDirectory(dir.resolve("Empty"));
     assertThrows(IllegalArgumentException.class, () -> Main.translate(empty));
