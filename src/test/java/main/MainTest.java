@@ -28,6 +28,25 @@ class MainTest {
   }
 
   @Test
+  void translatesAllVmFilesOfDirectoryIntoOneAsm() throws IOException {
+    Path program = Files.createDirectory(dir.resolve("Prog"));
+    Files.writeString(program.resolve("Main.vm"), "push static 0\n");
+    Files.writeString(program.resolve("Ball.vm"), "push static 0\n");
+    Files.writeString(program.resolve("notes.txt"), "ignored\n");
+    Path output = Main.translate(program);
+    assertEquals(program.resolve("Prog.asm").toAbsolutePath(), output);
+    String asm = Files.readString(output);
+    assertTrue(asm.indexOf("@Ball.0") < asm.indexOf("@Main.0"));
+    assertFalse(asm.contains("ignored"));
+  }
+
+  @Test
+  void rejectsDirectoryWithoutVmFiles() throws IOException {
+    Path empty = Files.createDirectory(dir.resolve("Empty"));
+    assertThrows(IllegalArgumentException.class, () -> Main.translate(empty));
+  }
+
+  @Test
   void rejectsFileWithoutVmExtension() throws IOException {
     Path source = dir.resolve("Foo.txt");
     Files.writeString(source, "add\n");

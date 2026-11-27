@@ -5,13 +5,15 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.stream.Stream;
 import parser.Parser;
 
 public class Main {
 
   public static void main(String[] args) {
     if (args.length != 1) {
-      System.err.println("usage: java -jar vmtranslator.jar <file.vm>");
+      System.err.println("usage: java -jar vmtranslator.jar <file.vm | directory>");
       System.exit(2);
     }
     try {
@@ -23,18 +25,40 @@ public class Main {
   }
 
   public static Path translate(Path input) throws IOException {
-    Path source = input.toAbsolutePath().normalize();
-    if (!Files.isRegularFile(source) || !source.getFileName().toString().endsWith(".vm")) {
-      throw new IllegalArgumentException("input must be a .vm file: " + input);
-    }
-    Path output = source.resolveSibling(baseName(source) + ".asm");
+    Path path = input.toAbsolutePath().normalize();
+    List<Path> sources = sources(path);
+    Path output = Files.isDirectory(path)
+        ? path.resolve(path.getFileName() + ".asm")
+        : path.resolveSibling(baseName(path) + ".asm");
     try (CodeWriter writer = new CodeWriter(output)) {
-      translateFile(source, writer);
+      for (Path source : sources) {
+        translateFile(source, writer);
+      }
     } catch (IOException | RuntimeException e) {
       Files.deleteIfExists(output);
       throw e;
     }
     return output;
+  }
+
+  private static List<Path> sources(Path path) throws IOException {
+    if (Files.isDirectory(path)) {
+      try (Stream<Path> files = Files.list(path)) {
+        List<Path> sources = files.filter(Main::isVmFile).sorted().toList();
+        if (sources.isEmpty()) {
+          throw new IllegalArgumentException("no .vm files in directory: " + path);
+        }
+        return sources;
+      }
+    }
+    if (!isVmFile(path)) {
+      throw new IllegalArgumentException("input must be a .vm file or a directory: " + path);
+    }
+    return List.of(path);
+  }
+
+  private static boolean isVmFile(Path path) {
+    return Files.isRegularFile(path) && path.getFileName().toString().endsWith(".vm");
   }
 
   private static void translateFile(Path file, CodeWriter writer) throws IOException {
