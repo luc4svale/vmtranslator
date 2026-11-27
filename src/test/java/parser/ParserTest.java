@@ -61,6 +61,21 @@ class ParserTest {
   }
 
   @Test
+  void readsBranchingCommands() throws IOException {
+    Parser parser = parse("label LOOP_START\ngoto END\nif-goto LOOP_START\n");
+    parser.advance();
+    assertEquals(CommandType.C_LABEL, parser.commandType());
+    assertEquals("LOOP_START", parser.arg1());
+    parser.advance();
+    assertEquals(CommandType.C_GOTO, parser.commandType());
+    assertEquals("END", parser.arg1());
+    parser.advance();
+    assertEquals(CommandType.C_IF, parser.commandType());
+    assertEquals("LOOP_START", parser.arg1());
+    assertThrows(IllegalStateException.class, parser::arg2);
+  }
+
+  @Test
   void acceptsWindowsLineEndings() throws IOException {
     Parser parser = parse("push constant 7\r\nadd\r\n");
     parser.advance();
@@ -80,6 +95,7 @@ class ParserTest {
   void rejectsWrongArgumentCount() {
     assertThrows(IllegalArgumentException.class, () -> parse("push constant\n"));
     assertThrows(IllegalArgumentException.class, () -> parse("add 1\n"));
+    assertThrows(IllegalArgumentException.class, () -> parse("goto\n"));
   }
 
   @Test

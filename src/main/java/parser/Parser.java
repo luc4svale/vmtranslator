@@ -75,6 +75,9 @@ public class Parser {
     return switch (keyword) {
       case "push" -> withNameAndNumber(CommandType.C_PUSH, tokens, line);
       case "pop" -> withNameAndNumber(CommandType.C_POP, tokens, line);
+      case "label" -> withName(CommandType.C_LABEL, tokens, line);
+      case "goto" -> withName(CommandType.C_GOTO, tokens, line);
+      case "if-goto" -> withName(CommandType.C_IF, tokens, line);
       default -> throw new IllegalArgumentException("line " + line + ": unknown command '" + keyword + "'");
     };
   }
@@ -82,6 +85,11 @@ public class Parser {
   private static Command withoutArgs(CommandType type, String[] tokens, int line) {
     expectArgs(tokens, 0, line);
     return new Command(type, tokens[0], 0);
+  }
+
+  private static Command withName(CommandType type, String[] tokens, int line) {
+    expectArgs(tokens, 1, line);
+    return new Command(type, tokens[1], 0);
   }
 
   private static Command withNameAndNumber(CommandType type, String[] tokens, int line) {
