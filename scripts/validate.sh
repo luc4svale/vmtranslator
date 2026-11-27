@@ -15,6 +15,12 @@ TESTS=(
   "7/MemoryAccess/BasicTest file"
   "7/MemoryAccess/PointerTest file"
   "7/MemoryAccess/StaticTest file"
+  "8/ProgramFlow/BasicLoop file"
+  "8/ProgramFlow/FibonacciSeries file"
+  "8/FunctionCalls/SimpleFunction file"
+  "8/FunctionCalls/NestedCall dir"
+  "8/FunctionCalls/FibonacciElement dir"
+  "8/FunctionCalls/StaticsTest dir"
 )
 
 if ! ./mvnw -q -DskipTests package; then
